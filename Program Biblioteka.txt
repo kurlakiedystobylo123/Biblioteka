@@ -1,0 +1,1096 @@
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <Windows.h>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+class Book
+{
+public:
+    string title_of_Book;
+    string author_of_Book;
+    int releaseDate_of_Book;
+    int Book_ID;
+
+    Book(int id, string title, string author, int releaseDate)
+    {
+        Book_ID = id;
+        title_of_Book = title;
+        author_of_Book = author;
+        releaseDate_of_Book = releaseDate;
+    }
+
+    friend ostream& operator<< (ostream &output, Book const& b)
+    {
+        return output << "ID Number:    " << b.Book_ID << endl << "Title:        " << b.title_of_Book << endl << "Author:       " << b.author_of_Book << endl << "Release Date: " << b.releaseDate_of_Book << endl;
+    }
+
+};
+
+
+class Library
+{
+public:
+    vector <Book> BooksVector;
+    vector <Book> LendBooks;
+
+    friend ostream& operator<< (ostream &output, const Library & lib)
+    {
+        for(int i = 0; i < lib.BooksVector.size(); i++)
+        {
+            output << lib.BooksVector[i]<<endl;
+        }
+        return output;
+    }
+
+    void AddBook(int id, string title, string author, int releaseDate)
+    {
+        BooksVector.push_back(Book(id, title, author, releaseDate));
+    }
+
+    int FindBook(vector<Book> BooksVector, int id)
+    {
+        for (int i = 0; i < BooksVector.size(); i++)
+        {
+            if(BooksVector[i].Book_ID==id)
+            {
+                return i;
+            }
+        }
+    }
+
+    bool Check_Id(int id)
+    {
+        fstream file("Library.txt", ios::in);
+        int buf = 0;
+        int nr = 1;
+        int nrlines = 0;
+        if (file.good()==false)
+        {
+            return true;
+        }
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                nrlines++;
+                if(nr%4==1)
+                {
+                    int identify;
+                    istringstream iss(line);
+                    iss>>identify;
+                    if (id != identify)
+                    {
+                        ++buf;
+                    }
+                }
+                nr++;
+            }
+            file.close();
+        }
+
+        if (buf == nrlines/4)
+        {
+            return true;
+        }
+        else
+            return false;
+
+        buf = 0;
+    }
+
+    void LendBook(vector<Book>BooksVector, int id)
+    {
+        vector < Book >::iterator it;
+        for(it=BooksVector.begin(); it != BooksVector.end(); ++it)
+        {
+            if((*it).Book_ID == id)
+            {
+                BooksVector.erase(it);
+            }
+        }
+    }
+
+    void ShowBooks(vector <Book> BooksVector)
+    {
+        for(int i = 0; i < BooksVector.size(); i++)
+        {
+            cout<<BooksVector[i]<<endl;
+        }
+    }
+
+    void SaveLendBooks(vector<Book> LendBooks)
+    {
+        fstream file("Lend.txt", ios::out);
+
+        if (file.good())
+        {
+            for(int i = 0; i < LendBooks.size(); i++)
+            {
+                file<<LendBooks[i].Book_ID<<endl;
+                file<<LendBooks[i].title_of_Book<<endl;
+                file<<LendBooks[i].author_of_Book<<endl;
+                file<<LendBooks[i].releaseDate_of_Book<<endl;
+            }
+        }
+    }
+
+    void SaveBooks(vector <Book> BooksVector)
+    {
+        fstream file("Library.txt", ios::out);
+
+        if (file.good())
+        {
+            for(int i = 0; i < BooksVector.size(); i++)
+            {
+                file<<BooksVector[i].Book_ID<<endl;
+                file<<BooksVector[i].title_of_Book<<endl;
+                file<<BooksVector[i].author_of_Book<<endl;
+                file<<BooksVector[i].releaseDate_of_Book<<endl;
+            }
+        }
+    }
+
+    void ReadLendBooks()
+    {
+        LendBooks.clear();
+        int nr = 1;
+        int id, releaseDate;
+        string title, author;
+        fstream file("Lend.txt", ios::in);
+
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                if(nr%4==1)
+                {
+                    istringstream iss(line);
+                    iss>>id;
+                    nr++;
+                    getline(file,line);
+                    if(nr%4==2)
+                    {
+                        title = line;
+                        nr++;
+                        getline(file,line);
+                        if(nr%4==3)
+                        {
+                            author = line;
+                            nr++;
+                            getline(file,line);
+                            if(nr%4==0)
+                            {
+                                istringstream iss(line);
+                                iss>>releaseDate;
+                                nr++;
+                            }
+                        }
+                    }
+                }
+                LendBooks.push_back(Book(id, title, author, releaseDate));
+                nr=nr+4;
+            }
+        }
+    }
+
+    void ReadBooks()
+    {
+        BooksVector.clear();
+        int nr = 1;
+        int id, releaseDate;
+        string title, author;
+        fstream file("Library.txt", ios::in);
+
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                if(nr%4==1)
+                {
+                    istringstream iss(line);
+                    iss>>id;
+                    nr++;
+                    getline(file,line);
+                    if(nr%4==2)
+                    {
+                        title = line;
+                        nr++;
+                        getline(file,line);
+                        if(nr%4==3)
+                        {
+                            author = line;
+                            nr++;
+                            getline(file,line);
+                            if(nr%4==0)
+                            {
+                                istringstream iss(line);
+                                iss>>releaseDate;
+                                nr++;
+                            }
+                        }
+                    }
+                }
+                BooksVector.push_back(Book(id, title, author, releaseDate));
+                nr=nr+4;
+            }
+        }
+    }
+
+    void TitleSearching(vector <Book> BooksVector, string title)
+    {
+        for(int i = 0; i < BooksVector.size(); i++)
+        {
+            if(BooksVector[i].title_of_Book.find(title) != string::npos)
+            {
+                cout<<endl<< BooksVector[i]<<endl;
+            }
+        }
+    }
+
+    void AuthorSearching(vector <Book> BooksVector, string author)
+    {
+        for(int i = 0; i < BooksVector.size(); i++)
+        {
+            if(BooksVector[i].author_of_Book.find(author) != string::npos)
+            {
+                cout<<endl<<BooksVector[i]<<endl;
+            }
+        }
+    }
+
+};
+
+
+class Employee
+{
+public:
+    string employee_login;
+    string employee_password;
+    int employee_id;
+
+    Employee(int id, string login, string password)
+    {
+        employee_id = id;
+        employee_login = login;
+        employee_password = password;
+    }
+
+    friend ostream& operator<< (ostream &output, Employee const& e)
+    {
+        return output << "ID Number:    "<<e.employee_id<<endl<<"Login:        "<<e.employee_login<<endl<< "Password:     "<<e.employee_password<<endl;
+    }
+};
+
+
+class Employees
+{
+public:
+    vector <Employee> EmployeesVector;
+
+    void CreateAccount(int id, string login, string password)
+    {
+        EmployeesVector.push_back(Employee(id, login, password));
+    }
+
+    friend ostream& operator<< (ostream &output, const Employees & emp)
+    {
+        for(int i = 0; i < emp.EmployeesVector.size(); i++)
+        {
+            output << emp.EmployeesVector[i]<<endl;
+        }
+        return output;
+    }
+
+    void SaveEmployees(vector <Employee> EmployeesVector)
+    {
+        fstream file("Employee.txt", ios::out);
+
+        if (file.good())
+        {
+            for(int i = 0; i < EmployeesVector.size(); i++)
+            {
+                file<<EmployeesVector[i].employee_id<<endl;
+                file<<EmployeesVector[i].employee_login<<endl;
+                file<<EmployeesVector[i].employee_password<<endl;
+            }
+        }
+    }
+
+    void ReadEmployees()
+    {
+        EmployeesVector.clear();
+        int nr = 1;
+        int id;
+        string login, password;
+        fstream file("Employee.txt", ios::in);
+
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                if(nr%3==1)
+                {
+                    istringstream iss(line);
+                    iss>>id;
+                    nr++;
+                    getline(file,line);
+                    if(nr%3==2)
+                    {
+                        login = line;
+                        nr++;
+                        getline(file,line);
+                        if(nr%3==0)
+                        {
+                            password = line;
+                            nr++;
+                        }
+                    }
+                }
+                EmployeesVector.push_back(Employee(id, login, password));
+                nr=nr+3;
+            }
+        }
+    }
+
+    bool Check_Id(int id, string login, string password)
+    {
+        fstream file("Employee.txt", ios::in);
+        int buf = 0;
+        int nr = 1;
+        int nrlines = 0;
+        if (file.good()==false)
+        {
+            return true;
+        }
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                nrlines++;
+                if(nr%3==1)
+                {
+                    int identify;
+                    istringstream iss(line);
+                    iss>>identify;
+                    if (id != identify)
+                    {
+                        ++buf;
+                    }
+                }
+
+                else if(nr%3==2)
+                {
+                    if (login != line)
+                    {
+                        ++buf;
+                    }
+                }
+
+                else if(nr%3==0)
+                {
+                    if (password != line)
+                    {
+                        ++buf;
+                    }
+                }
+                nr++;
+            }
+            file.close();
+        }
+
+        if (buf == nrlines)
+        {
+            return true;
+        }
+        else
+            return false;
+
+        buf = 0;
+    }
+
+    bool LogIn(string login, string password)
+    {
+        fstream file("Employee.txt", ios::in);
+        int buf = 0;
+        int nr = 1;
+        if (file.good()==false)
+        {
+            return false;
+        }
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                if(nr%3==2)
+                {
+                    if (login == line)
+                    {
+                        ++buf;
+                        nr++;
+                        getline(file, line);
+                        if (password == line)
+                        {
+                            ++buf;
+                        }
+                    }
+                }
+                nr++;
+            }
+            file.close();
+        }
+
+        if(buf == 2)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+
+        buf = 0;
+    }
+};
+
+
+class Reader
+{
+public:
+    string reader_name;
+    int reader_ID;
+    vector<int> BorrowedBooks;
+
+    Reader(int id, string name)
+    {
+        reader_ID = id;
+        reader_name = name;
+    }
+
+    void BorrowBook(vector <Book> BooksVector, int id)
+    {
+        for(int i = 0; i < BooksVector.size(); i++)
+        {
+            if(BooksVector[i].Book_ID == id)
+            {
+                BorrowedBooks.push_back(id);
+            }
+        }
+    }
+};
+
+
+class Readers
+{
+public:
+    vector <Reader> ReadersVector;
+
+    void CreateAccount(int id, string name)
+    {
+        ReadersVector.push_back(Reader(id, name));
+    }
+
+    int FindReader(vector<Reader> ReadersVector, int id)
+    {
+        for (int i = 0; i < ReadersVector.size(); i++)
+        {
+            if(ReadersVector[i].reader_ID==id)
+            {
+                return i;
+            }
+        }
+    }
+
+    void SaveReaders(vector <Reader> ReadersVector)
+    {
+        fstream file("Reader.txt", ios::out);
+
+        if (file.good())
+        {
+            for(int i = 0; i < ReadersVector.size(); i++)
+            {
+                file<<ReadersVector[i].reader_ID<<endl;
+                file<<ReadersVector[i].reader_name<<endl;
+                if(ReadersVector[i].BorrowedBooks.size()==0)
+                {
+                    file <<endl;
+                }
+                else
+                {
+                    for(int j = 0; j < ReadersVector[i].BorrowedBooks.size(); j++)
+                    {
+                        file << ReadersVector[i].BorrowedBooks[j]<<'\t';
+                    }
+                    file<<endl;
+                }
+            }
+        }
+    }
+
+    void ReadReaders()
+    {
+        ReadersVector.clear();
+        int nr = 1;
+        int id, book_id;
+        string name, book;
+        fstream file("Reader.txt", ios::in);
+        int buf = 0;
+
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                if(nr%3==1)
+                {
+                    istringstream iss(line);
+                    iss>>id;
+                    nr++;
+                    getline(file,line);
+                    if(nr%3==2)
+                    {
+                        name = line;
+                        ReadersVector.push_back(Reader(id, name));
+                        nr++;
+                        getline(file,line);
+                        if(nr%3==0)
+                        {
+                            int j=0;
+                            istringstream iss( line );
+                            while(iss >> book_id);
+                            {
+                                ReadersVector[buf].BorrowedBooks.push_back(book_id);
+                                buf++;
+                                nr++;
+                                j++;
+                            }
+                        }
+                    }
+                }
+                nr=nr+3;
+            }
+        }
+    }
+
+    void ShowReaders(vector <Reader> ReadersVector)
+    {
+            for(int i = 0; i < ReadersVector.size(); i++)
+            {
+                cout<<"Reader's ID:    "<<ReadersVector[i].reader_ID<<endl;
+                cout<<"Reader's Name:  "<<ReadersVector[i].reader_name<<endl;
+                cout<<"Reader's Books: ";
+                if(ReadersVector[i].BorrowedBooks.empty())
+                {
+                    for(int j = 0; j < ReadersVector[i].BorrowedBooks.size(); j++)
+                    {
+                        cout << ReadersVector[i].BorrowedBooks[j]<<'\t';
+                    }
+                }
+                else
+                {
+                    cout<<endl;
+                }
+                cout<<endl<<endl;
+            }
+    }
+
+    bool Check_Id(int id)
+    {
+        fstream file("Reader.txt", ios::in);
+        int buf = 0;
+        int nr = 1;
+        int nrlines = 0;
+        if (file.good()==false)
+        {
+            return true;
+        }
+        if (file.good())
+        {
+            string line;
+            while(getline(file, line))
+            {
+                nrlines++;
+                if(nr%3==1)
+                {
+                    int identify;
+                    istringstream iss(line);
+                    iss>>identify;
+                    if (id != identify)
+                    {
+                        ++buf;
+                    }
+                }
+                nr++;
+            }
+            file.close();
+        }
+
+        if (buf == nrlines/3)
+        {
+            return true;
+        }
+        else
+            return false;
+
+        buf = 0;
+    }
+
+};
+
+
+bool ReleaseDateSort(Book book1, Book book2)
+{
+    return book1.releaseDate_of_Book < book2.releaseDate_of_Book;
+    //sort(library.BooksVector.begin(), library.BooksVector.end(), ReleaseDateSort);
+}
+
+
+bool TitleSort(Book book1, Book book2)
+{
+    return book1.title_of_Book < book2.title_of_Book;
+    //sort(library.BooksVector.begin(), library.BooksVector.end(), TitleSort);
+}
+
+
+bool AuthorSort(Book book1, Book book2)
+{
+    return book1.author_of_Book < book2.author_of_Book;
+    //sort(library.BooksVector.begin(), library.BooksVector.end(), AuthorSort);
+}
+
+
+
+int main()
+{
+    Employees library_employees;
+    Library library;
+    Readers readers;
+    library.ReadBooks();
+
+    int option, id, menu;
+    string login, password;
+    do
+    {
+        library_employees.ReadEmployees();
+
+        cout<<"LIBRARY"<<endl;
+        cout<<"--------------------------------------"<<endl;
+        cout<<"1.Logging Into The System"<<endl;
+        cout<<"2.I don't have an account - Signing Up"<<endl;
+        cout<<"3.EXIT"<<endl<<endl;
+        cout<<"Select:";
+        while(!(cin>>option))
+        {
+            cin.clear();
+            cin.sync();
+            break;
+        }
+        system("cls");
+
+
+        switch(option)
+        {
+        case 1:
+        {
+            int right=0;
+            do
+            {
+                cout<<"Employee's Login:";
+                cin>>login;
+                cout<<"Password:";
+                cin>>password;
+                cout<<endl;
+
+                if(library_employees.LogIn(login, password)==true)
+                {
+                    cout<<"You Have Been Logged!"<<endl;
+                    Sleep(2500);
+                    system("cls");
+                    do
+                    {
+                        cout<<"Main Menu"<<endl;
+                        cout<<"------------------------"<<endl;
+                        cout<<"1.Load List Of Employees"<<endl;
+                        cout<<"2.Load List Of Available Books"<<endl;
+                        cout<<"3.Find a Book via Title"<<endl;
+                        cout<<"4.Find a Book via Author"<<endl;
+                        cout<<"5.Add New Book"<<endl;
+                        cout<<"6.Add New Reader"<<endl;
+                        cout<<"7.Hire a Book"<<endl;
+                        cout<<"8.Return a Book"<<endl;
+                        cout<<"9.Load List Of Readers"<<endl;
+                        cout<<"10.Logout"<<endl;
+                        cout<<"11.EXIT"<<endl;
+                        cout<<endl<<"Select:";
+                        while(!(cin>>menu))
+                        {
+                            cin.clear();
+                            cin.sync();
+                            break;
+                        }
+                        system("cls");
+
+
+                        switch(menu)
+                        {
+                        case 1:
+                        {
+                            cout<<library_employees;
+                            cout<<endl<< "Press Enter To Return To Main Menu"<<endl;
+                            cin.ignore();
+                            cin.get();
+                            system("cls");
+                        }
+                        break;
+
+                        case 2:
+                        {
+                            int sorting;
+                            do
+                            {
+                                cout<<library<<endl;
+                                cout<<"1.Sort via Title"<<endl;
+                                cout<<"2.Sort via Author"<<endl;
+                                cout<<"3.Sort via Release Date"<<endl;
+                                cout<<"Default: Return to Main Menu"<<endl;
+                                cout<<endl<<"Select:";
+                                while(!(cin>>sorting))
+                                {
+                                    cin.clear();
+                                    cin.sync();
+                                    break;
+                                }
+                                system("cls");
+
+
+                                switch(sorting)
+                                {
+                                case 1:
+                                    sort(library.BooksVector.begin(), library.BooksVector.end(), TitleSort);
+                                    break;
+                                case 2:
+                                    sort(library.BooksVector.begin(), library.BooksVector.end(), AuthorSort);
+                                    break;
+                                case 3:
+                                    sort(library.BooksVector.begin(), library.BooksVector.end(), ReleaseDateSort);
+                                    break;
+                                default:
+                                    break;
+                                }
+                            }
+                            while(sorting==1||sorting==2||sorting==3);
+                        }
+                        break;
+
+                        case 3:
+                        {
+                            string title;
+                            cout<<"Type a title: ";
+                            cin.ignore();
+                            getline(cin, title);
+                            library.TitleSearching(library.BooksVector, title);
+                            cout<<endl<< "Press Enter To Return To Main Menu"<<endl;
+                            cin.get();
+                            system("cls");
+                        }
+                        break;
+
+                        case 4:
+                        {
+                            string author;
+                            cout<<"Type an author's name: ";
+                            cin.ignore();
+                            getline(cin, author);
+                            library.AuthorSearching(library.BooksVector, author);
+                            cout<<endl<< "Press Enter To Return To Main Menu"<<endl;
+                            cin.get();
+                            system("cls");
+                        }
+                        break;
+
+                        case 5:
+                        {
+                            int id, releaseDate, choice;
+                            string title, author;
+
+                            do
+                            {
+                                cout<<"Add New Position"<<endl;
+                                cout<<"----------------"<<endl;
+                                cout<<"ID No.:";
+                                while(!(cin>>id))
+                                {
+                                    cin.clear();
+                                    cin.sync();
+                                    system("cls");
+                                    cout<<"Add New Position"<<endl;
+                                    cout<<"-----------------"<<endl;
+                                    cout<<"ID No.:";
+                                }
+                                cin.sync();
+                                cout<<"Title:";
+                                getline( cin, title );
+                                cin.sync();
+                                cout<<"Author:";
+                                getline( cin, author );
+                                cin.sync();
+                                cout<<"Release Date:";
+                                cin>>releaseDate;
+                                cin.sync();
+
+                                if(library.Check_Id(id)==true&&id!=0)
+                                {
+                                    library.AddBook(id, title, author, releaseDate);
+                                    library.SaveBooks(library.BooksVector);
+                                    library.ReadBooks();
+                                }
+                                else
+                                {
+                                    cout<<"This ID is Already Taken! - Try Another One."<<endl;
+                                    Sleep(2500);
+                                }
+                                system("cls");
+                                cout<<"Add another book?"<<endl;
+                                cout<<"1.YES"<<endl;
+                                cout<<"2.NO"<<endl;
+                                cout<<"Select:"<<endl;
+                                cin>>choice;
+                                cin.sync();
+                                system("cls");
+                            }
+                            while(choice!=2);
+                        }
+                        break;
+
+                        case 6:
+                            {
+                                int id;
+                                string name;
+                                do
+                                {
+                                    cout<<"Adding New Reader"<<endl;
+                                    cout<<"--------------------"<<endl;
+                                    cout<<"Select ID Number:";
+                                    while(!(cin>>id))
+                                    {
+                                        cin.clear();
+                                        cin.sync();
+                                        system("cls");
+                                        cout<<"Adding New Reader"<<endl;
+                                        cout<<"-----------------"<<endl;
+                                        cout<<"Select ID Number:";
+                                    }
+                                    cout<<"Type Reader's Name:";
+                                    cin.ignore();
+                                    getline(cin, name);
+                                    cout<<endl;
+                                    if(readers.Check_Id(id)==true)
+                                    {
+                                        readers.CreateAccount(id, name);
+                                        cout<<"Your Account Have Been Successfully Created!"<<endl;
+                                        readers.SaveReaders(readers.ReadersVector);
+                                        Sleep(2500);
+                                        system("cls");
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        cout<<"This ID is already taken! - Try Again."<<endl;
+                                        Sleep(2500);
+                                        system("cls");
+                                    }
+                                }
+                                while(true);
+                            }
+                            break;
+
+                        case 7:
+                            {
+                                int reader_id, book_id;
+                                cout<<"Hiring a Book"<<endl;
+                                cout<<"-----------------------"<<endl;
+                                cout<<"Type Number ID of Book: ";
+                                while(!(cin>>book_id))
+                                {
+                                    cin.clear();
+                                    cin.sync();
+                                    system("cls");
+                                    cout<<"Hiring a Book"<<endl;
+                                    cout<<"-----------------------"<<endl;
+                                    cout<<"Type Number ID of Book: ";
+                                }
+                                cout<<endl<<"Type Number ID of Reader: ";
+                                while(!(cin>>reader_id))
+                                {
+                                    cin.clear();
+                                    cin.sync();
+                                    system("cls");
+                                    cout<<"Hiring a Book"<<endl;
+                                    cout<<"--------------------------"<<endl;
+                                    cout<<"Type Number ID of Book:"<<book_id<<endl<<endl;
+                                    cout<<"Type Number ID of Reader: ";
+                                }
+                                int x = library.FindBook(library.BooksVector, book_id);
+                                int y = readers.FindReader(readers.ReadersVector, reader_id);
+                                readers.ReadersVector[y].BorrowBook(library.BooksVector, book_id);
+                                readers.SaveReaders(readers.ReadersVector);
+                                readers.ReadReaders();
+                                library.LendBooks.push_back(library.BooksVector[x]);
+                                library.SaveLendBooks(library.LendBooks);
+                                library.ReadLendBooks();
+                                library.BooksVector.erase(library.BooksVector.begin() + x);
+                                library.SaveBooks(library.BooksVector);
+                                library.ReadBooks();
+                                system("cls");
+                            }
+                            break;
+
+                        case 8 :
+                            {
+                                int reader_id, book_id;
+                                cout<<"Returning a Book"<<endl;
+                                cout<<"-----------------------"<<endl;
+                                cout<<"Type Number ID of Book: ";
+                                while(!(cin>>book_id))
+                                {
+                                    cin.clear();
+                                    cin.sync();
+                                    system("cls");
+                                    cout<<"Returning a Book"<<endl;
+                                    cout<<"-----------------------"<<endl;
+                                    cout<<"Type Number ID of Book: ";
+                                }
+                                cout<<endl<<"Type Number ID of Reader: ";
+                                while(!(cin>>reader_id))
+                                {
+                                    cin.clear();
+                                    cin.sync();
+                                    system("cls");
+                                    cout<<"Returning a Book"<<endl;
+                                    cout<<"--------------------------"<<endl;
+                                    cout<<"Type Number ID of Book: "<<book_id<<endl<<endl;
+                                    cout<<"Type Number ID of Reader: ";
+                                }
+                                library.ReadLendBooks();
+                                library.ReadBooks();
+                                int x = library.FindBook(library.LendBooks, book_id);
+                                int y = readers.FindReader(readers.ReadersVector, reader_id);
+                                int z = readers.FindReader(readers.ReadersVector, book_id);
+                                readers.ReadersVector[y].BorrowedBooks.erase(readers.ReadersVector[y].BorrowedBooks.begin() + z);
+                                readers.SaveReaders(readers.ReadersVector);
+                                readers.ReadReaders();
+                                library.BooksVector.push_back(library.LendBooks[x]);
+                                library.SaveBooks(library.BooksVector);
+                                library.ReadBooks();
+                                library.LendBooks.erase(library.LendBooks.begin() + x);
+                                library.SaveLendBooks(library.LendBooks);
+                                library.ReadLendBooks();
+                                system("cls");
+                            }
+                            break;
+                        case 9:
+                            {
+                            readers.ReadReaders();
+                            readers.ShowReaders(readers.ReadersVector);
+                            cout<<endl<< "Press Enter To Return To Main Menu"<<endl;
+                            cin.ignore();
+                            cin.get();
+                            system("cls");
+                            }
+                            break;
+                        case 10:
+                            break;
+                        case 11:
+                            exit(0);
+                            break;
+                        default:
+                            break;
+                        }
+                    }
+                    while(menu!=10);
+
+                }
+                else if(right==2)
+                {
+                    system("cls");
+                    break;
+                }
+                else
+                {
+                    cout<<"Wrong Login or Password! - Try Again."<<endl;
+                    ++right;
+                    Sleep(2500);
+                    system("cls");
+                }
+            }
+            while(menu!=10);
+        }
+        break;
+
+
+        case 2:
+        {
+            do
+            {
+                cout<<"Creating New Account"<<endl;
+                cout<<"--------------------"<<endl;
+                cout<<"Pick Your ID Number:";
+                while(!(cin>>id))
+                {
+                    cin.clear();
+                    cin.sync();
+                    system("cls");
+                    cout<<"Creating New Account"<<endl;
+                    cout<<"--------------------"<<endl;
+                    cout<<"Pick Your ID Number:";
+                }
+                cout<<"Your Login:";
+                cin>>login;
+                cout<<"Password:";
+                cin>>password;
+                cout<<endl;
+                if(library_employees.Check_Id(id, login, password)==true&&id!=0)
+                {
+                    library_employees.ReadEmployees();
+                    library_employees.CreateAccount(id, login, password);
+                    library_employees.SaveEmployees(library_employees.EmployeesVector);
+                    library_employees.ReadEmployees();
+                    cout<<"Your Account Have Been Successfully Created!"<<endl;
+                    Sleep(2500);
+                    system("cls");
+                    break;
+                }
+                else
+                {
+                    cout<<"ID or Login is already taken! - Try Again."<<endl;
+                    Sleep(2500);
+                    system("cls");
+                }
+            }
+            while(true);
+        }
+        break;
+
+
+        case 3:
+            exit(0);
+
+
+        default:
+            break;
+        }
+    }
+    while(true);
+
+    return 0;
+}
